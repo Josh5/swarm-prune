@@ -1,0 +1,47 @@
+# ---------------
+# Swarm Prune
+#
+# ---------------
+# Config (paste into portainer advance env text input):
+#
+# <config_start>
+#   #@ Placement
+#   #-    Configure a placement constraint to where the container will be run.
+#   #-    Examples:
+#   #-        - node.hostname==<hostname>
+#   #-        - engine.labels.fs-access.<worker-hostname>.mnt==true
+#   #-        - node.role!=manager
+#   PLACEMENT_CONSTRAINT=node.platform.os==linux
+#   CRON_SCHEDULE=0 3 * * 0
+#   FILTER_IMAGE=label!=keep
+#   FILTER_BUILD_CACHE=label!=keep
+# <config_end>
+#
+# ---------------
+---
+version: "3.8"
+
+services:
+  swarm-prune:
+    image: ghcr.io/josh5/swarm-prune:latest
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+      placement:
+        constraints:
+          - ${PLACEMENT_CONSTRAINT:-node.platform.os==linux}
+    environment:
+      CRON_SCHEDULE: ${CRON_SCHEDULE:-}
+      FILTER_IMAGE: ${FILTER_IMAGE:-}
+      FILTER_BUILD_CACHE: ${FILTER_BUILD_CACHE:-}
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
